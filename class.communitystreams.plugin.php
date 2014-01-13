@@ -32,6 +32,11 @@ $PluginInfo['CommunityStreams'] = array(
 
 class CommunityStreams extends Gdn_Plugin {
 
+  /**
+   * Adds a link to the streams settings page on the profile
+   * 
+   * @param object $Sender
+   */
   public function ProfileController_AfterAddSideMenu_Handler($Sender) {
     $SideMenu = $Sender->EventArguments['SideMenu'];
     $Session = Gdn::Session();
@@ -45,74 +50,66 @@ class CommunityStreams extends Gdn_Plugin {
     }
   }
 
+  /**
+   * Renders the profile settings page on the profile
+   * 
+   * @param object $Sender
+   * @param array $Args
+   */
   public function ProfileController_CommunityStreams_Create($Sender, $Args) {
     $Args = $Sender->RequestArgs;
-    if(sizeof($Args) < 2)
-      $Args = array_merge($Args, array(0, 0));
-    elseif(sizeof($Args) > 2)
-      $Args = array_slice($Args, 0, 2);
+    $UserReference = GetValue(0, $Args, 0);
+    $Username = GetValue(1, $Args, ' ');
 
-    list($UserReference, $Username) = $Args;
     $Sender->Permission('Garden.SignIn.Allow');
     $Sender->GetUserInfo($UserReference, $Username);
-    $UserPrefs = Gdn_Format::Unserialize($Sender->User->Preferences);
-    if(!is_array($UserPrefs))
-      $UserPrefs = array();
 
-    $Validation = new Gdn_Validation();
-    $ConfigurationModel = new Gdn_ConfigurationModel($Validation);
-    $ConfigArray = array(
-        'Plugin.Signatures.Sig' => NULL,
-        'Plugin.Signatures.HideAll' => NULL,
-        'Plugin.Signatures.HideImages' => NULL,
-        'Plugin.Signatures.ShowFirst' => NULL
-    );
-    $SigUserID = $ViewingUserID = Gdn::Session()->UserID;
+    $StreamModel = new CommunityStreamsModel();
+    // Set the model on the form.
+    $Sender->Form->SetModel($StreamModel);
 
-    if($Sender->User->UserID != $ViewingUserID) {
+    $ViewingUserID = Gdn::Session()->UserID;
+    $EditingUserID = $Sender->User->UserID;
+    if($EditingUserID != $ViewingUserID) {
       $Sender->Permission('Garden.Users.Edit');
-      $SigUserID = $Sender->User->UserID;
+      $UserID = $Sender->User->UserID;
+    }
+    else {
+      $UserID = $ViewingUserID;
     }
 
-    $Sender->SetData('Plugin-Signatures-ForceEditing', ($SigUserID == Gdn::Session()->UserID) ? FALSE : $Sender->User->Name);
+    $Sender->SetData('Plugin-CommunityStreams-ForceEditing', ($UserID == $ViewingUserID) ? FALSE : $Sender->User->Name);
 
-    $UserMeta = $this->GetUserMeta($SigUserID, '%');
-
-    if($Sender->Form->AuthenticatedPostBack() === FALSE && is_array($UserMeta))
-      $ConfigArray = array_merge($ConfigArray, $UserMeta);
-
-    $ConfigurationModel->SetField($ConfigArray);
-
-    // Set the model on the form.
-    $Sender->Form->SetModel($ConfigurationModel);
+    $Sender->Form->AddHidden('UserID', $UserID);
 
     // If seeing the form for the first time...
     if($Sender->Form->AuthenticatedPostBack() === FALSE) {
       // Apply the config settings to the form.
-      $Sender->Form->SetData($ConfigurationModel->Data);
+      $Sender->Form->SetData($StreamModel->GetID($UserID));
     }
     else {
-      $Values = $Sender->Form->FormValues();
-      $FrmValues = array_intersect_key($Values, $ConfigArray);
-      if(sizeof($FrmValues)) {
-        foreach($FrmValues as $UserMetaKey => $UserMetaValue) {
-          $this->SetUserMeta($SigUserID, $this->TrimMetaKey($UserMetaKey), $UserMetaValue);
-        }
+      if($Sender->Form->Save()) {
+        $Sender->StatusMessage = T('Your changes have been saved.');
       }
-
-      $Sender->StatusMessage = T("Your changes have been saved.");
     }
 
-    $Sender->Render($this->GetView('settings.php'));
+    $Sender->Render($this->GetView('profile-settings.php'));
   }
 
+  /**
+   * Create a 'controller' on the plugin controller
+   * 
+   * @param type $Sender
+   */
   public function PluginController_CommunityStreams_Create($Sender) {
+    $this->_AddResources($Sender);
     // Makes it act like a mini controller
     $this->Dispatch($Sender, $Sender->RequestArgs);
   }
 
   public function Controller_Index($Sender) {
-    // Display all the streams
+    // Get All the stream info all the streams
+    
     echo T('Plugins.CommunityStreams.SadTruth');
     echo "\nPlugin Index: " . $this->GetPluginIndex();
     echo "\nPlugin Folder: " . $this->GetPluginFolder();
@@ -133,8 +130,22 @@ class CommunityStreams extends Gdn_Plugin {
 
   public function Setup() {
     // SaveToConfig('Plugins.CommunityStreams.EnableAdvancedMode', TRUE);
+    $this->Structure();
   }
 
+  public function Structure() {
+    $Database = Gdn::Database();
+    $Construct = $Database->Structure();
+
+    $Construct->Table('Stream');
+    $Construct
+            ->PrimaryKey('StreamID')
+            ->Column('UserID', 'int', FALSE)
+            ->Column('Service', array('justin', 'twitch'), TRUE)
+            ->Column('AccountID', 'varchar(255)', TRUE)
+            ->Set();
+  }
+  
   public function OnDisable() {
     // RemoveFromConfig('Plugins.CommunityStreams.EnableAdvancedMode');
   }
