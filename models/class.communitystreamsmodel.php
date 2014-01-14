@@ -6,4 +6,9 @@ class CommunityStreamsModel extends VanillaModel {
     parent::__construct('Stream');
   }
   
+  public function GetByUserID($UserID, $DatasetType = FALSE) {
+    $Result = $this->GetWhere(array("UserID" => $UserID))->FirstRow($DatasetType);
+    return $Result;
+  }
+
 }
