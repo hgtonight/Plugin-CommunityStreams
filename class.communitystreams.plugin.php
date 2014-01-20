@@ -123,10 +123,12 @@ class CommunityStreams extends Gdn_Plugin {
     // Get All the stream info all the streams
     $StreamModel = new CommunityStreamsModel();
     
-    $Streams = $StreamModel->Get();
+    $Streams = $StreamModel->Get()->Result();
+    //decho($Streams);
     
+    $String = '';
     foreach($Streams as $Stream) {
-      $Users = array(
+      /*$Users = array(
 		'archerv2' => 'twitch',
 		'drlegitimate' => 'twitch',
 		'quiltedvino' => 'twitch',
@@ -135,73 +137,30 @@ class CommunityStreams extends Gdn_Plugin {
 		'blackflag89347' => 'justin',
 		'truktruk' => 'twitch',
 		'barret80' => 'twitch',
-	);
+	);*/
+      switch($Stream->Service) {
+        case 'twitch':
+          $Link = 'http://www.twitch.tv/' . $Stream->AccountID;
+          break;
+        case 'justin':
+          $Link = 'http://www.justin.tv/' . $Stream->AccountID;
+          break;
+        default:
+          $Link = ltrim(GetValue('Destination', Gdn::Router()->GetRoute('DefaultController'), ''), '/');
+          break;
+      }
 
-	ob_start();
-	$List = '';
-	$Count = 0;
-	echo '<ul id="Streamers">';
-	// Generate list of channels
-	foreach ($Users as $User => $Service) {
-		try {
-			switch($Service) {
-			case 'twitch':
-				$Link = 'http://www.twitch.tv/'.$User;
-				$Stream = TwitchTV::get_stream( $User );//json_decode(get_content('https://api.twitch.tv/kraken/streams/'.$User));
-				//var_dump($Stream);
-				if($Stream->stream) {
-					// they are streaming at twitch right now.
-					$Live = 'Streaming';
-					$Screen = $Stream->stream->preview->medium;
-				}
-				else {
-					$Channel = TwitchTV::get_channel( $User );//json_decode(get_content('https://api.twitch.tv/kraken/channels/'.$User));
-					//var_dump($Channel);
-					$Live = 'Offline';
-					$Screen = $Channel->logo;
-					if(!$Screen) {
-						$Screen = $Channel->video_banner;
-					}
-				}
-				
-				break;
-			case 'justin':
-				$Link = 'http://www.justin.tv/'.$User;
-				$Stream = json_decode(get_content('http://api.justin.tv/api/stream/list.json?channel='.$User));
-				if($Stream) {
-					// They are streaming at justion.tv right now.
-					$Live = 'Streaming';
-					//var_dump($Stream);
-					$Screen = $Stream[0]->channel->screen_cap_url_medium;
-				}
-				else {
-					// need to get their channel info instead
-					$Channel = json_decode(get_content('http://api.justin.tv/api/channel/show/'.$User.'.json'));
-					$Live = 'Offline';
-					//var_dump($Channel);
-					$Screen = $Channel->image_url_medium;
-				}
-				break;
-			default:
-				break;
-			}
-			$Alt = ($Count % 2) ? ' class="Alt"': '';
-			$List .= '<li'.$Alt.'>
-				<a href="'.$Link.'" title="'.$User.'\'s '.$Service.' Stream">
-				<img src="'.$Screen.'" class="ScreenPreview" />
-				<span class="'.$Live.'">&nbsp;</span>
-				</a></li>';
-			$Count++;
-		} catch (NotFoundException $e) {
-			// Ignore requests for services that don't exist
-		}
+        $String .= Wrap(
+                Anchor($Stream->UserID, $Link) .
+                $Stream->AccountID, 'li', array('data-service' => $Stream->Service, 'class' => $Stream->Online));
 	}
+  
+  $String = Wrap($String, 'ul', array('class' => 'CommunityStreamers'));
+  
+  $Sender->SetData('StreamList', $String);
+  $Sender->Render($this->GetView('community-streams.php'));
 	
-	echo $List;
-	echo '</ul>';
-      decho($Stream);
     }
-  }
 
   public function Controller_Details($Sender, $Args) {
     // Show a specific stream details
@@ -212,12 +171,13 @@ class CommunityStreams extends Gdn_Plugin {
   }
 
   private function _AddResources($Sender) {
+    $Sender->Head->AddScript('https://ttv-api.s3.amazonaws.com/twitch.min.js');
     $Sender->AddJsFile($this->GetResource('js/communitystreams.js', FALSE, FALSE));
     $Sender->AddCssFile($this->GetResource('design/communitystreams.css', FALSE, FALSE));
   }
 
   public function Setup() {
-    // SaveToConfig('Plugins.CommunityStreams.EnableAdvancedMode', TRUE);
+    SaveToConfig('Plugins.CommunityStreams.TwitchAPIClientID', FALSE);
     $this->Structure();
   }
 
