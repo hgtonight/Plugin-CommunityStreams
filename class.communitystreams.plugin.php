@@ -34,7 +34,7 @@ class CommunityStreams extends Gdn_Plugin {
 
   /**
    * Adds a link to the streams settings page on the profile
-   * 
+   *
    * @param object $Sender
    */
   public function ProfileController_AfterAddSideMenu_Handler($Sender) {
@@ -52,7 +52,7 @@ class CommunityStreams extends Gdn_Plugin {
 
   /**
    * Renders the profile settings page on the profile
-   * 
+   *
    * @param object $Sender
    * @param array $Args
    */
@@ -81,13 +81,13 @@ class CommunityStreams extends Gdn_Plugin {
     // Add the data needed by the view and form
     $Sender->SetData('Plugin-CommunityStreams-ForceEditing', ($UserID == $ViewingUserID) ? FALSE : $Sender->User->Name);
     $Sender->Form->AddHidden('UserID', $UserID);
-    
+
     // Get any existing stream data and add the stream id to the form
     $Stream = $StreamModel->GetByUserID($UserID);
     if($Stream) {
       $Sender->Form->AddHidden('StreamID', $Stream->StreamID);
     }
-    
+
     // If seeing the form for the first time...
     if($Sender->Form->AuthenticatedPostBack() === FALSE) {
       // Apply the config settings to the form.
@@ -104,10 +104,13 @@ class CommunityStreams extends Gdn_Plugin {
 
   /**
    * Create a 'controller' on the plugin controller
-   * 
+   *
    * @param type $Sender
    */
   public function PluginController_CommunityStreams_Create($Sender) {
+    $Sender->MasterView = '';
+    $Sender->RemoveCssFile('admin.css');
+    $Sender->AddCssFile('style.css');
     $this->_AddResources($Sender);
     // Makes it act like a mini controller
     $this->Dispatch($Sender, $Sender->RequestArgs);
@@ -116,54 +119,54 @@ class CommunityStreams extends Gdn_Plugin {
   /**
    * This outputs the stored stated of the db and uses ajax calls to update the
    * stored state
-   * 
+   *
    * @param object $Sender
    */
   public function Controller_Index($Sender) {
     // Get All the stream info all the streams
     $StreamModel = new CommunityStreamsModel();
-    
-    $Streams = $StreamModel->Get()->Result();
-    //decho($Streams);
-    
-    $String = '';
-    foreach($Streams as $Stream) {
-      /*$Users = array(
-		'archerv2' => 'twitch',
-		'drlegitimate' => 'twitch',
-		'quiltedvino' => 'twitch',
-		'oliveversiongardentwo' => 'twitch',
-		'cherrydoom' => 'justin',
-		'blackflag89347' => 'justin',
-		'truktruk' => 'twitch',
-		'barret80' => 'twitch',
-	);*/
-      switch($Stream->Service) {
-        case 'twitch':
-          $Link = 'http://www.twitch.tv/' . $Stream->AccountID;
-          break;
-        case 'justin':
-          $Link = 'http://www.justin.tv/' . $Stream->AccountID;
-          break;
-        default:
-          $Link = ltrim(GetValue('Destination', Gdn::Router()->GetRoute('DefaultController'), ''), '/');
-          break;
-      }
 
-        $String .= Wrap(
-                Anchor($Stream->UserID, $Link) .
-                $Stream->AccountID, 'li', array('data-service' => $Stream->Service, 'class' => $Stream->Online));
-	}
-  
-  $String = Wrap($String, 'ul', array('class' => 'CommunityStreamers'));
-  
-  $Sender->SetData('StreamList', $String);
-  $Sender->Render($this->GetView('community-streams.php'));
-	
-    }
+    $Streams = $StreamModel->Get('Sort', 'desc')->Result();
 
-  public function Controller_Details($Sender, $Args) {
+    $Sender->SetData('CommunityStreams', $Streams);
+    $Sender->Title = T('Community Streams');
+    $Sender->Render($this->GetView('community-streams.php'));
+  }
+
+  public function Controller_Details($Sender) {
     // Show a specific stream details
+  }
+
+  /**
+   * Called by JS to update the cache time and status of users
+   *
+   * @param type $Sender
+   * @param type $Args
+   */
+  public function Controller_Update($Sender) {
+    $Targs = $Sender->RequestArgs;
+    $ForeignKey = GetValue(1, $Targs, FALSE);
+    $Session = Gdn::Session();
+    if(!$Session->ValidateTransientKey($ForeignKey, TRUE)) {
+      echo 'INVALID SESSION';
+      die();
+    }
+    
+    $Args = $Sender->Request;
+    $UserID = $Args->GetValue('userid', -1);
+    $Status = $Args->GetValue('online', NULL);
+    $Photo = $Args->GetValue('photo', NULL);
+    
+    decho($Sender->Request->GetRequestArguments());
+    die();
+
+    $Result = FALSE;
+    if(!is_null($Status) && is_numeric($UserID) && $UserID > 0) {
+      $StreamModel = new CommunityStreamsModel();
+      $StreamModel->UpdateStatus($UserID, $Status);
+      $Result = TRUE;
+    }
+    $Sender->RenderData(array('Result' => $Result));
   }
 
   public function Base_Render_Before($Sender) {
@@ -171,7 +174,7 @@ class CommunityStreams extends Gdn_Plugin {
   }
 
   private function _AddResources($Sender) {
-    $Sender->Head->AddScript('https://ttv-api.s3.amazonaws.com/twitch.min.js');
+    $Sender->AddJsFile($this->GetResource('js/twitch.js', FALSE, FALSE));
     $Sender->AddJsFile($this->GetResource('js/communitystreams.js', FALSE, FALSE));
     $Sender->AddCssFile($this->GetResource('design/communitystreams.css', FALSE, FALSE));
   }
@@ -193,9 +196,11 @@ class CommunityStreams extends Gdn_Plugin {
             ->Column('AccountID', 'varchar(255)', TRUE)
             ->Column('Online', 'tinyint(1)', FALSE)
             ->Column('Photo', 'varchar(255)', TRUE)
+            ->Column('DateUpdated', 'datetime')
+            ->Column('Sort', 'int', TRUE)
             ->Set();
   }
-  
+
   public function OnDisable() {
     // RemoveFromConfig('Plugins.CommunityStreams.EnableAdvancedMode');
   }
