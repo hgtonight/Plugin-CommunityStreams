@@ -11,10 +11,14 @@ class CommunityStreamsModel extends VanillaModel {
     return $Result;
   }
   
-  public function UpdateStatus($UserID, $Status = 0) {
-    $Result = $this->SQL
+  public function UpdateStream($UserID, $Status = 0, $Photo = NULL) {
+    $this->SQL
             ->Update('Stream')
-            ->Set('Online', $Status)
+            ->Set('Online', $Status);
+    if($Photo) {
+      $this->SQL->Set('Photo', $Photo);
+    }
+    $Result = $this->SQL
             ->Set('DateUpdated', date(DATE_ISO8601))
             ->Where('UserID', $UserID)
             ->Put();

@@ -147,7 +147,7 @@ class CommunityStreams extends Gdn_Plugin {
     $Targs = $Sender->RequestArgs;
     $ForeignKey = GetValue(1, $Targs, FALSE);
     $Session = Gdn::Session();
-    if(!$Session->ValidateTransientKey($ForeignKey, TRUE)) {
+    if(!$Session->ValidateTransientKey($ForeignKey, FALSE)) {
       echo 'INVALID SESSION';
       die();
     }
@@ -157,13 +157,10 @@ class CommunityStreams extends Gdn_Plugin {
     $Status = $Args->GetValue('online', NULL);
     $Photo = $Args->GetValue('photo', NULL);
     
-    decho($Sender->Request->GetRequestArguments());
-    die();
-
     $Result = FALSE;
     if(!is_null($Status) && is_numeric($UserID) && $UserID > 0) {
       $StreamModel = new CommunityStreamsModel();
-      $StreamModel->UpdateStatus($UserID, $Status);
+      $StreamModel->UpdateStream($UserID, $Status, $Photo);
       $Result = TRUE;
     }
     $Sender->RenderData(array('Result' => $Result));
