@@ -34,10 +34,10 @@ $Streams = $this->Data('CommunityStreams');
       }
 
       $String .= Wrap(
-              Anchor($Stream->AccountID, $Url) .
-              $Stream->AccountID, 'li', array('data-service' => $Stream->Service, 'data-uid' => $Stream->UserID, 'data-date' => $Stream->DateUpdated, 'class' => $Class));
+              Anchor(
+                      Img($Stream->Photo), '/plugin/communitystreams/details/' . $Stream->StreamID), 'li', array('data-service' => $Stream->Service, 'data-uid' => $Stream->UserID, 'data-date' => $Stream->DateUpdated, 'class' => $Class));
     }
 
-    $String = Wrap($String, 'ul', array('class' => 'CommunityStreamers'));
+    $String = Wrap($String, 'ul', array('id' => 'CommunityStreamers'));
 
 echo $String;

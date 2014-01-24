@@ -10,10 +10,10 @@ function UpdateTwitches(CacheMinutes) {
   var Twitches = [];
   // Find all the streamers that need to be updated
   $("li[data-service='twitch']").each(function() {
-    var CurrentDate = Date.UTC();
-    var TargetUpdate = Date.UTC(CurrentDate - 15 * 60000);
+    var CurrentDate = new Date();
+    var TargetUpdate = new Date(CurrentDate.getTime() - 15 * 60000);
     var DateUpdated = $(this).attr('data-date').split(/[- :]/);
-    var CachedDate = Date.UTC(DateUpdated[0], DateUpdated[1] - 1, DateUpdated[2], DateUpdated[3], DateUpdated[4], DateUpdated[5]);
+    var CachedDate = new Date(DateUpdated[0], DateUpdated[1] - 1, DateUpdated[2], DateUpdated[3], DateUpdated[4], DateUpdated[5]);
 
     if (CachedDate < TargetUpdate) {
       var Account = $(this).children('a').html();
@@ -36,22 +36,27 @@ function UpdateTwitches(CacheMinutes) {
       {
         var Streamer = Twitches[i];
         Twitch.api({method: 'streams/' + Streamer.TwitchID}, function(error, list) {
-          var Status = 0;
-          var Photo = null;
+          var Status, Photo;
           if (list.stream) {
             Status = 1;
             Photo = list.stream.preview.medium;
-            UpdateDB({userid: Streamer.UserID, photo: Photo, online: Status});
+            
+            var DataObj = {userid: Streamer.UserID, photo: Photo, online: Status};
+            UpdateDB(DataObj);
+            UpdateList(DataObj);
           }
           else {
             // get photo from the channel
             Twitch.api({method: 'channels/' + Streamer.TwitchID}, function(error, list) {
+              Status = 0;
               Photo = list.logo;
               if (!Photo) {
                 Photo = list.video_banner;
               }
-
-              UpdateDB({userid: Streamer.UserID, photo: Photo, online: Status});
+              
+              var DataObj = {userid: Streamer.UserID, photo: Photo, online: Status};
+              UpdateDB(DataObj);
+              UpdateList(DataObj);
             });
           }
         });
@@ -79,4 +84,16 @@ function UpdateDB(info) {
       console.debug(Data);
     }
   });
+}
+
+function UpdateList(info) {
+  var CSSClass = 'Offline';
+  if(info.online) {
+    CSSClass = 'Online';
+  }
+  // Update the class
+  $("li[data-uid='" + infor.userid + "']").removeClass().addClass(CSSClass);
+  
+  // Update the photo
+  $("li[data-uid='" + infor.userid + "'] a img").append('<img src="' + info.photo + '"></img>');
 }

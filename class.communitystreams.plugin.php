@@ -134,7 +134,23 @@ class CommunityStreams extends Gdn_Plugin {
   }
 
   public function Controller_Details($Sender) {
+    $StreamID = GetValue(1, $Sender->RequestArgs, FALSE);
+
+    if(!$StreamID) {
+      throw NotFoundException('Stream');
+    }
     // Show a specific stream details
+    $StreamModel = new CommunityStreamsModel();
+    $Stream = $StreamModel->GetID($StreamID);
+
+    if(!$Stream->StreamID) {
+      throw NotFoundException('Stream');
+    }
+    $UserModel = new UserModel();
+    $User = $UserModel->GetID($Stream->UserID);
+    $Sender->SetData('Stream', $Stream);
+    $Sender->Title = $User->Name . ' ' . T('\'s Stream');
+    $Sender->Render($this->GetView('stream-details.php'));
   }
 
   /**
@@ -148,8 +164,7 @@ class CommunityStreams extends Gdn_Plugin {
     $ForeignKey = GetValue(1, $Targs, FALSE);
     $Session = Gdn::Session();
     if(!$Session->ValidateTransientKey($ForeignKey, FALSE)) {
-      echo 'INVALID SESSION';
-      die();
+      throw new Gdn_UserException(T('Invalid Session'));
     }
     
     $Args = $Sender->Request;

@@ -1,0 +1,33 @@
+#CommunityStreamers li {
+	background: rgb(0, 0, 17);
+	border-radius: 5px;
+	margin: 10px;
+	padding: 10px;
+	width: 130px;
+	float: left;
+}
+
+#CommunityStreamers li:hover {
+	background: gray;
+}
+
+#CommunityStreamers img {
+	width: 130px;
+	height: 130px;
+}
+
+#CommunityStreamers .Streaming {
+	display: block;
+	border-radius: 50%;
+	width: 18px;
+	height: 18px; 
+	background: rgb(255,0,0);
+	position: relative;
+	bottom: 130px;
+	right: 10px;
+	float: right;
+}
+
+#CommunityStreamers .Offline {
+	opacity: 0.5;
+}
