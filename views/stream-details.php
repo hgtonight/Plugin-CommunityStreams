@@ -9,8 +9,8 @@ echo '<object type="application/x-shockwave-flash" height="378" width="620" id="
         $Stream->AccountID
         . '&auto_play=true&start_volume=25" /></object>';
 
-echo '<iframe frameborder="0" scrolling="no" id="chat_embed" src="http://twitch.tv/chat/embed?channel=' .
+/*echo '<iframe frameborder="0" scrolling="no" id="chat_embed" src="http://twitch.tv/chat/embed?channel=' .
         $Stream->AccountID
-        . '&amp;popout_chat=true" height="500" width="350"></iframe>';
+        . '&popout_chat=true" height="500" width="350"></iframe>';*/
 
 //echo '<iframe id="player" type="text/html" width="620" height="378" src="http://www.twitch.tv/' . $Stream->AccountID . '/hls" frameborder="0"></iframe>';
