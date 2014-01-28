@@ -35,7 +35,12 @@ $Streams = $this->Data('CommunityStreams');
 
       $String .= Wrap(
               Anchor(
-                      Img($Stream->Photo), '/plugin/communitystreams/details/' . $Stream->StreamID), 'li', array('data-account' => $Stream->AccountID, 'data-service' => $Stream->Service, 'data-uid' => $Stream->UserID, 'data-date' => $Stream->DateUpdated, 'class' => $Class));
+                      Img($Stream->Photo), '/plugin/communitystreams/details/' . $Stream->StreamID), 'li', array(
+                          'data-account' => $Stream->AccountID,
+                          'data-service' => $Stream->Service,
+                          'data-uid' => $Stream->UserID,
+                          'data-cache-date' => gmdate('c', strtotime($Stream->DateUpdated)),
+                          'class' => $Class));
     }
 
     $String = Wrap($String, 'ul', array('id' => 'CommunityStreamers'));

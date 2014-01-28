@@ -112,6 +112,9 @@ class CommunityStreams extends Gdn_Plugin {
     $Sender->RemoveCssFile('admin.css');
     $Sender->AddCssFile('style.css');
     $this->_AddResources($Sender);
+    
+    // Use this to reconcile any timezone differences
+    $Sender->AddDefinition('CurrentServerDateTime', date(DATE_ISO8601));
     // Makes it act like a mini controller
     $this->Dispatch($Sender, $Sender->RequestArgs);
   }
@@ -178,7 +181,9 @@ class CommunityStreams extends Gdn_Plugin {
       $StreamModel->UpdateStream($UserID, $Status, $Photo);
       $Result = TRUE;
     }
-    $Sender->RenderData(array('Result' => $Result));
+    
+    // Pass the result and the server's time back to keep everything in sync
+    $Sender->RenderData(array('Result' => $Result, 'DateTime' => date(DATE_ISO8601)));
   }
 
   public function Base_Render_Before($Sender) {
