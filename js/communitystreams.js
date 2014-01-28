@@ -16,6 +16,10 @@ jQuery(document).ready(function($) {
       }
     });
   }
+  
+  if($("li[data-service='justin']").length) {
+    UpdateJustinAccounts(15);
+  }
 });
 
 function UpdateTwitchAccounts(CacheMinutes) {
@@ -65,6 +69,81 @@ function UpdateTwitchAccounts(CacheMinutes) {
 
   // Queue another update when the cache should be expired
   setTimeout(UpdateTwitchAccounts, CacheMinutes * 60000);
+}
+
+function UpdateJustinAccounts(CacheMinutes) {
+  CacheMinutes = typeof CacheMinutes !== 'undefined' ? CacheMinutes : 15;
+  var ServerDate = gdn.definition('CurrentServerDateTime');
+  var CurrServerDate = new Date(Date.parse(ServerDate));
+  // Find all the streamers that need to be updated
+  $("li[data-service='justin']").each(function() {
+    var TargetDate = new Date(Date.parse(ServerDate) - CacheMinutes * 60000);
+    var CachedDate = new Date(Date.parse($(this).attr('data-cache-date')));
+
+    // only update if the cache date is older than the requested update interval
+    if (CachedDate.getTime() < TargetDate.getTime()) {
+      var Account = $(this).attr('data-account');
+      var UID = $(this).attr('data-uid');
+      console.log('Updating ' + Account + ' from user ' + UID + ' for Justin...');
+      
+      $.ajax({
+        url: 'http://api.justin.tv/api/stream/list.json',
+        global: false,
+        type: 'GET',
+        data: {channel: Account},
+        dataType: 'json',
+        success: function(Data) {
+          console.log(Data);
+ 
+        }
+      });
+      /*$Stream = json_decode(get_content('http://api.justin.tv/api/stream/list.json?channel='.$User));
+				if($Stream) {
+					// They are streaming at justion.tv right now.
+					$Live = 'Streaming';
+					//var_dump($Stream);
+					$Screen = $Stream[0]->channel->screen_cap_url_medium;
+				}
+				else {
+					// need to get their channel info instead
+					$Channel = json_decode(get_content('http://api.justin.tv/api/channel/show/'.$User.'.json'));
+					$Live = 'Offline';
+					//var_dump($Channel);
+					$Screen = $Channel->image_url_medium;
+				}
+      Twitch.api({method: 'streams/' + Account}, function(error, list) {
+        var Status, Photo;
+        if (list.stream) {
+          Status = 1;
+          Photo = list.stream.preview.medium;
+
+          var DataObj = {userid: UID, photo: Photo, online: Status};
+          UpdateDBAndList(DataObj);
+        }
+        else {
+          // get photo from the channel
+          Twitch.api({method: 'channels/' + Account}, function(error, list) {
+            Status = 0;
+            Photo = list.logo;
+            if (!Photo) {
+              Photo = list.video_banner;
+            }
+            
+            if(Photo === null) {
+              // use a default avatar instead
+              Photo = 'plugins/communitystreams/design/default.png';
+            }
+
+            var DataObj = {userid: UID, photo: Photo, online: Status};
+            UpdateDBAndList(DataObj);
+          });
+        }
+      });*/
+    }
+  });
+
+  // Queue another update when the cache should be expired
+  setTimeout(UpdateJustinAccounts, CacheMinutes * 60000);
 }
 
 function UpdateDBAndList(info) {
