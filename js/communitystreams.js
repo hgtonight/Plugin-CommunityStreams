@@ -1,8 +1,10 @@
 /* Copyright 2014 Zachary Doll */
 jQuery(document).ready(function($) {
-  // Only init the twitch api if there are twitch users in the list
-  if ($("li[data-service='twitch']").length) {
-    Twitch.init({clientId: 'p3sjg1826u06kkilciu3dq0arszem1h'}, function(error, status) {
+  // Only init the twitch api if we have an API key
+  // and there are twitch users in the list
+  var TwitchAPIKey = gdn.definition('TwitchAPIKey', false);
+  if (TwitchAPIKey && $("li[data-service='twitch']").length) {
+    Twitch.init({clientId: TwitchAPIKey}, function(error, status) {
       if (error) {
         // error encountered while loading
         console.debug(error);
@@ -17,7 +19,10 @@ jQuery(document).ready(function($) {
     });
   }
   
-  if($("li[data-service='justin']").length) {
+  // Only update justin users if we have an API key
+  // and there are justin users in the list
+  var JustinAPIKey = gdn.definition('JustinAPIKey', false);
+  if(JustinAPIKey && $("li[data-service='justin']").length) {
     UpdateJustinAccounts(15);
   }
 });
@@ -85,16 +90,15 @@ function UpdateJustinAccounts(CacheMinutes) {
       var Account = $(this).attr('data-account');
       var UID = $(this).attr('data-uid');
       console.log('Updating ' + Account + ' from user ' + UID + ' for Justin...');
-      
       $.ajax({
-        url: 'http://api.justin.tv/api/stream/list.json',
+        url: 'http://api.justin.tv/api/channel/show/login.json',
         global: false,
         type: 'GET',
         data: {channel: Account},
         dataType: 'json',
         success: function(Data) {
-          console.log(Data);
- 
+          console.log('Success!');
+          console.debug(Data);
         }
       });
       /*$Stream = json_decode(get_content('http://api.justin.tv/api/stream/list.json?channel='.$User));

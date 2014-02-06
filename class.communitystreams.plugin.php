@@ -33,6 +33,37 @@ $PluginInfo['CommunityStreams'] = array(
 class CommunityStreams extends Gdn_Plugin {
 
   /**
+   * Create a settings page to input API keys
+   * 
+   * @param type $Sender
+   */
+  public function SettingsController_CommunityStreams_Create($Sender) {
+    if (property_exists($Sender, 'Menu')) {
+      $Sender->Menu->HighlightRoute('/settings/communitystreams');
+    }
+    $Sender->AddSideMenu('settings/communitystreams');
+
+    $Sender->Permission('Garden.Settings.Manage');
+
+    $ConfigModule = new ConfigurationModule($Sender);
+
+    $ConfigModule->Initialize(array(
+      'Plugins.CommunityStreams.TwitchAPIKey' => array(
+        'LabelCode' => 'Twitch.tv API Key',
+        'Control'   => 'Textbox'
+      ),
+      'Plugins.CommunityStreams.JustinAPIKey' => array(
+        'LabelCode' => 'Justin.tv API Key',
+        'Control'   => 'Textbox'
+      )
+    ));
+    $Sender->Title(T('Plugins.CommunityStreams.Settings'));
+    $Sender->ConfigurationModule = $ConfigModule;
+
+    $ConfigModule->RenderAll();
+  }
+  
+  /**
    * Adds a link to the streams settings page on the profile
    *
    * @param object $Sender
@@ -113,6 +144,9 @@ class CommunityStreams extends Gdn_Plugin {
     $Sender->AddCssFile('style.css');
     $this->_AddResources($Sender);
     
+    $Sender->AddDefinition('TwitchAPIKey', C('Plugins.CommunityStreams.TwitchAPIKey', FALSE));
+    $Sender->AddDefinition('JustinAPIKey', C('Plugins.CommunityStreams.JustinAPIKey', FALSE));
+    
     // Use this to reconcile any timezone differences
     $Sender->AddDefinition('CurrentServerDateTime', date(DATE_ISO8601));
     // Makes it act like a mini controller
@@ -142,6 +176,7 @@ class CommunityStreams extends Gdn_Plugin {
     if(!$StreamID) {
       throw NotFoundException('Stream');
     }
+    
     // Show a specific stream details
     $StreamModel = new CommunityStreamsModel();
     $Stream = $StreamModel->GetID($StreamID);
@@ -153,7 +188,21 @@ class CommunityStreams extends Gdn_Plugin {
     $User = $UserModel->GetID($Stream->UserID);
     $Sender->SetData('Stream', $Stream);
     $Sender->Title = $User->Name . ' ' . T('\'s Stream');
-    $Sender->Render($this->GetView('stream-details.php'));
+
+    // Add the chat module
+    $Module = new StreamChatModule($Stream);
+    $Sender->AddModule($Module);
+        
+    switch($Stream->Service) {
+      case 'twitch':
+        $Sender->Render($this->GetView('twitch-details.php'));
+        break;
+      case 'justin':
+        $Sender->Render($this->GetView('justin-details.php'));
+        break;
+      default:
+        throw NotFoundException('Stream Service');
+    }
   }
 
   /**
