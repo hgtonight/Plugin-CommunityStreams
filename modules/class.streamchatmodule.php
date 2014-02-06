@@ -23,11 +23,11 @@ class StreamChatModule extends Gdn_Module {
           case 'twitch':
             return '<iframe frameborder="0" scrolling="no" id="chat_embed" src="http://twitch.tv/chat/embed?channel='
                     . $this->_Stream->AccountID
-                    . '&popout_chat=true" height="500" width="350"></iframe>';
+                    . '&popout_chat=true" height="500" width="300"></iframe>';
           case 'justin':
             return '<iframe allowtransparency="true" frameborder="0" scrolling="no" id="chat_embed" src="http://www.justin.tv/chat/embed?channel='
                     . $this->_Stream->AccountID
-                    . '&amp;default_chat=jtv&amp;#r=-rid-&amp;s=em"height="500" width="350"></iframe>';
+                    . '&amp;default_chat=jtv&amp;#r=-rid-&amp;s=em"height="500" width="300"></iframe>';
           default:
             return '';
         }

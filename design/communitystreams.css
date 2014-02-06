@@ -41,3 +41,12 @@
 #CommunityStreamers .Offline {
 	opacity: 0.5;
 }
+
+#Panel {
+  width: 300px;
+  float: right;
+}
+
+#Body .ContentColumn {
+  margin: 0px 330px 0px 0px;
+}
