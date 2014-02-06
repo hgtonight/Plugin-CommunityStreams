@@ -89,8 +89,17 @@ class CommunityStreams extends Gdn_Plugin {
    */
   public function ProfileController_CommunityStreams_Create($Sender, $Args) {
     $Args = $Sender->RequestArgs;
+	$Session = Gdn::Session();
+	//decho($Session);
+	
     $UserReference = GetValue(0, $Args, 0);
     $Username = GetValue(1, $Args, ' ');
+	
+	// default to the signed in user
+	if($UserReference == 0 && $Username == ' ') {
+		$UserReference = $Session->UserID;;
+		$Username = $Session->User->Name;
+	}
 
     $Sender->Permission('Garden.SignIn.Allow');
     $Sender->GetUserInfo($UserReference, $Username);
@@ -99,7 +108,7 @@ class CommunityStreams extends Gdn_Plugin {
     // Set the model on the form.
     $Sender->Form->SetModel($StreamModel);
 
-    $ViewingUserID = Gdn::Session()->UserID;
+    $ViewingUserID = $Session->UserID;
     $EditingUserID = $Sender->User->UserID;
     if($EditingUserID != $ViewingUserID) {
       $Sender->Permission('Garden.Users.Edit');
@@ -235,10 +244,6 @@ class CommunityStreams extends Gdn_Plugin {
     $Sender->RenderData(array('Result' => $Result, 'DateTime' => date(DATE_ISO8601)));
   }
 
-  public function Base_Render_Before($Sender) {
-    $this->_AddResources($Sender);
-  }
-
   private function _AddResources($Sender) {
     $Sender->AddJsFile($this->GetResource('js/twitch.js', FALSE, FALSE));
     $Sender->AddJsFile($this->GetResource('js/communitystreams.js', FALSE, FALSE));
@@ -260,9 +265,9 @@ class CommunityStreams extends Gdn_Plugin {
             ->Column('UserID', 'int', FALSE)
             ->Column('Service', array('justin', 'twitch'), TRUE)
             ->Column('AccountID', 'varchar(255)', TRUE)
-            ->Column('Online', 'tinyint(1)', FALSE)
+            ->Column('Online', 'tinyint(1)', 0)
             ->Column('Photo', 'varchar(255)', TRUE)
-            ->Column('DateUpdated', 'datetime')
+            ->Column('DateUpdated', 'datetime', '1970-01-01 00:00:01')
             ->Column('Sort', 'int', TRUE)
             ->Set();
   }
