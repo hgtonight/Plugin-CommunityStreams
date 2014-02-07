@@ -180,6 +180,7 @@ class CommunityStreams extends Gdn_Plugin {
   }
 
   public function Controller_Details($Sender) {
+    $Sender->CssClass .= ' details';
     $StreamID = GetValue(1, $Sender->RequestArgs, FALSE);
 
     if(!$StreamID) {

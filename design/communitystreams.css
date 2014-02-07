@@ -59,11 +59,11 @@
   opacity: 0.5;
 }
 
-#Panel {
+.details #Panel {
   width: 300px;
   float: right;
 }
 
-#Body .ContentColumn {
+.details #Body .ContentColumn {
   margin: 0px 330px 0px 0px;
 }
