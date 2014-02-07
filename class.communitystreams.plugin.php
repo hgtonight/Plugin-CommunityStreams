@@ -172,7 +172,7 @@ class CommunityStreams extends Gdn_Plugin {
     // Get All the stream info all the streams
     $StreamModel = new CommunityStreamsModel();
 
-    $Streams = $StreamModel->Get('Online', 'desc')->Result();
+    $Streams = $StreamModel->GetAll();
 
     $Sender->SetData('CommunityStreams', $Streams);
     $Sender->Title = T('Community Streams');

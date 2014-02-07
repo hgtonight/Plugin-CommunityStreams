@@ -11,6 +11,16 @@ class CommunityStreamsModel extends VanillaModel {
     return $Result;
   }
   
+  public function GetAll() {
+    return $this->SQL
+            ->Select('s.*, u.Name as Username')
+            ->From('Stream s')
+            ->LeftJoin('User u', 's.UserID = u.UserID')
+            ->OrderBy('s.Online', 'desc')
+            ->Get()
+            ->Result(DATASET_TYPE_OBJECT);
+  }
+  
   public function UpdateStream($UserID, $Status = 0, $Photo = NULL) {
     $this->SQL
             ->Update('Stream')
