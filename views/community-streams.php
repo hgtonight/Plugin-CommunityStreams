@@ -4,16 +4,6 @@ echo Wrap($this->Title, 'h1');
 $Streams = $this->Data('CommunityStreams');
     $String = '';
     foreach($Streams as $Stream) {
-      /* $Users = array(
-        'archerv2' => 'twitch',
-        'drlegitimate' => 'twitch',
-        'quiltedvino' => 'twitch',
-        'oliveversiongardentwo' => 'twitch',
-        'cherrydoom' => 'justin',
-        'blackflag89347' => 'justin',
-        'truktruk' => 'twitch',
-        'barret80' => 'twitch',
-        ); */
       
       switch($Stream->Service) {
         case 'twitch':
@@ -35,7 +25,7 @@ $Streams = $this->Data('CommunityStreams');
 
       $String .= Wrap(
               Anchor(
-                      Img($Stream->Photo), '/plugin/communitystreams/details/' . $Stream->StreamID), 'li', array(
+                      Img($Stream->Photo, array('title' => ' ')), '/plugin/communitystreams/details/' . $Stream->StreamID, array('title' => $Stream->Username)), 'li', array(
                           'data-account' => $Stream->AccountID,
                           'data-service' => $Stream->Service,
                           'data-uid' => $Stream->UserID,
