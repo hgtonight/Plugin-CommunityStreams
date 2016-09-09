@@ -21,7 +21,7 @@ class StreamChatModule extends Gdn_Module {
       else {
         switch($this->_Stream->Service) {
           case 'twitch':
-            return '<iframe frameborder="0" scrolling="no" id="chat_embed" src="http://twitch.tv/chat/embed?channel='
+            return '<iframe frameborder="0" scrolling="no" id="chat_embed" src="https://twitch.tv/chat/embed?channel='
                     . $this->_Stream->AccountID
                     . '&popout_chat=true" height="500" width="300"></iframe>';
           case 'justin':
